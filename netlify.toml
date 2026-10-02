@@ -1,4 +1,3 @@
-# Netlify settings for thelonerjev.com
 [build]
-  publish   = "site"               # the website itself
-  functions = "netlify/functions"  # the small server code that talks to Laylo
+  publish = "."
+  functions = "."
