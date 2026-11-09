@@ -12,5 +12,5 @@
 /contactme   /contact      301
 /about       /             301
 
-# Old product links (shared on socials) still reach the store
-/product-page/*   https://jkweto8.wixsite.com/thelonerjev/product-page/:splat   301
+# Old Wix product links (shared on socials) land on the shop page, which now sells through Shopify
+/product-page/*   /shop   301

@@ -449,6 +449,10 @@ canvas{position:fixed;inset:0;z-index:0;width:100%;height:100%;display:block;cur
 .s-price{font-size:13px;font-weight:700;letter-spacing:.06em;color:rgba(255,255,255,.75);white-space:nowrap;font-variant-numeric:tabular-nums}
 .s-card:hover .ib,.s-card:focus-visible .ib{clip-path:inset(-20% 0 -20% 0)}
 .s-name .ib{left:-10px;top:-2px;width:calc(100% + 22px);height:calc(100% + 4px)}
+/* sold out: the piece stays on show, dimmed, and can't be bought */
+.s-card.out .s-garm{filter:grayscale(.85) brightness(.7)}.s-card.out .s-price{color:rgba(255,255,255,.5)}
+.s-sizes button:disabled{opacity:.35;text-decoration:line-through;cursor:not-allowed}.s-sizes button:disabled:hover{border-color:rgba(255,255,255,.28)}
+.shop a.s-buy.off{background:rgba(255,255,255,.18);color:rgba(255,255,255,.7);cursor:not-allowed}.s-buy.off::before{display:none}
 /* lookbook */
 .s-look{display:flex;gap:16px;margin-top:40px;overflow-x:auto;scrollbar-width:none;padding-bottom:6px}
 .s-look::-webkit-scrollbar{display:none}
@@ -1433,52 +1437,80 @@ page.querySelectorAll('#m-home').forEach(b=>b.addEventListener('click',()=>docum
 </script>
 <script>
 (()=>{ // ================= SHOP PAGE =================
-const STORE='https://jkweto8.wixsite.com/thelonerjev'; // the Wix store, now at its own address
+/* The pieces sold in jev.'s Shopify store. Each one: name, photos (first = card, second = hover / back), sizes with their
+   Shopify variant ids and prices, and the points shown in the drawer. "Buy now" opens the store on that piece with the
+   chosen size already picked. When the store is open, /api/shop (netlify function shop.mjs) reads its live product list
+   and this page updates prices and sold-out sizes by itself; if it can't, the list below is used as is.
+   To add a piece: copy one entry, use its Shopify handle (the end of its product link) and its variant ids.          */
+const STORE='https://rgy88y-1y.myshopify.com'; // Shopify keeps this address working even after a custom domain is added
 const SHOP={
-  products:[ // name, price, link to the store, sizes, photos (first = card, second = hover / back)
-    {id:'hoodie',name:'LONER Full Zip Hoodie',full:'LONER Unisex Heavy Blend\u2122 Full Zip Hooded Sweatshirt',price:47.72,cur:'US$',url:STORE+'/product-page/loner-unisex-heavy-blend-full-zip-hooded-sweatshirt',
-     sizes:['S','M','L','XL','2XL','3XL'],imgs:['img-5a98535b81.webp','img-0bfa6c1136.webp'],
-     points:['50/50 cotton-poly, medium-heavy 8 oz fabric','Silver metal zipper, roomy front pockets','Embroidered left chest, printed wrist details','Classic fit, runs true to size']},
-    {id:'solus',name:'SOLUS FC tee',price:30,cur:'US$',url:STORE+'/product-page/solus-fc-tee',sizes:['One size'],imgs:['img-c5cd147841.webp','img-93a577ecbc.webp'],
-     points:['Solus f.c. front graphic','Checkerboard pattern','\u201cS\u201d star embroidery','2-button collar, one size fit','Custom \u201cLONERWEAR\u201d printed neck label','100% polyester']},
-    {id:'solus-purple',name:'SOLUS FC tee (purple)',price:30,cur:'US$',url:STORE+'/product-page/solus-fc-tee-purple',sizes:['One size'],imgs:['img-e78b7183a8.webp'],
-     points:['Solus f.c. front graphic','Checkerboard pattern','\u201cS\u201d star embroidery','2-button collar, one size fit','Custom \u201cLONERWEAR\u201d printed neck label','100% polyester']}],
-  returns:'https://portal.returngo.ai?shop=www.thelonerjev.com',contact:STORE+'/contactme'
+  products:[
+    {handle:'unisex-boxy-drop-shoulder-crop-t-shirt',name:'ronin crop tee',full:'ronin Boxy Drop Shoulder Crop T-Shirt',isNew:1,
+     imgs:['ronin-crop-tee-front.webp','ronin-crop-tee-back.webp'],
+     sizes:{S:[48146490622036,25],M:[48146490654804,25],L:[48146490687572,25],XL:[48146490720340,25],'2XL':[48146490753108,25]},
+     points:['Black, red dragon on the front','Boxy, cropped fit with dropped shoulders','Mid-weight cotton','Machine wash cold on gentle, don’t iron the print']},
+    {handle:'essential-cotton-long-sleeve-t-shirt-1',name:'ronin long sleeve (black)',full:'ronin Cotton Long Sleeve T-Shirt, black',isNew:1,
+     imgs:['ronin-ls-black-front.webp','ronin-ls-black-back.webp'],
+     sizes:{S:[48146489573460,30],M:[48146489606228,30],L:[48146489638996,30],XL:[48146489671764,30],'2XL':[48146489704532,30]},
+     points:['Black, red dragon on the front','Loose fit with dropped shoulders','100% cotton','Machine wash cold on gentle, don’t iron the print']},
+    {handle:'essential-cotton-long-sleeve-t-shirt',name:'ronin long sleeve (white)',full:'ronin Cotton Long Sleeve T-Shirt, white',isNew:1,
+     imgs:['ronin-ls-white-front.webp','ronin-ls-white-back.webp'],
+     sizes:{S:[48146488590420,30],M:[48146488623188,30],L:[48146488655956,30],XL:[48146488688724,30],'2XL':[48146488721492,30]},
+     points:['White, red dragon on the front','Loose fit with dropped shoulders','100% cotton','Machine wash cold on gentle, don’t iron the print']},
+    {handle:'essential-heavyweight-cotton-t-shirt',name:'ronin heavyweight tee',full:'ronin Heavyweight Cotton T-Shirt',isNew:1,
+     imgs:['ronin-heavy-tee-front.webp','ronin-heavy-tee-back.webp'],
+     sizes:{XS:[48146491670612,20],S:[48146491703380,20],M:[48146491736148,20],L:[48146491768916,20],XL:[48146491801684,20],'2XL':[48146491834452,20]},
+     points:['White, red dragon on the front','Heavyweight 330 gsm, 100% cotton','Loose fit with dropped shoulders','Machine wash cold on gentle, don’t iron the print']},
+    {handle:'loner-unisex-heavy-blend™-full-zip-hooded-sweatshirt',name:'LONER Full Zip Hoodie',full:'LONER Unisex Heavy Blend™ Full Zip Hooded Sweatshirt',
+     imgs:['img-5a98535b81.webp','img-0bfa6c1136.webp'],
+     sizes:{S:[47373393821780,47.72],M:[47373393920084,47.72],L:[47373393952852,47.72],XL:[47373393887316,47.72],'2XL':[47373393789012,54.02],'3XL':[47373393854548,58.05]},
+     points:['50/50 cotton-poly, medium-heavy 8 oz fabric','Silver metal zipper, roomy front pockets','Embroidered left chest, printed wrist details','Classic fit, runs true to size']}],
+  cur:'US$'
 };
+const ORDER=['XS','S','M','L','XL','2XL','3XL','4XL','5XL'];
+SHOP.products.forEach(p=>{p.list=Object.keys(p.sizes).sort((a,b)=>ORDER.indexOf(a)-ORDER.indexOf(b));p.avail={};p.list.forEach(s=>p.avail[s]=true);});
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const STAR='<span class="m-star" aria-hidden="true">★</span>';
 const STARPATH='<svg class="s-star" viewBox="0 0 100 100" aria-hidden="true"><path d="M50 4 L61.8 37.6 L97.5 38.2 L69 59.9 L79.4 94 L50 73.6 L20.6 94 L31 59.9 L2.5 38.2 L38.2 37.6 Z"/></svg>';
-const money=p=>p.cur+p.price.toFixed(2);
+const fmt=n=>SHOP.cur+Number(n).toFixed(2);
+const inStock=p=>p.list.filter(s=>p.avail[s]);
+const soldOut=p=>!inStock(p).length;
+function priceLabel(p,size){if(size)return fmt(p.sizes[size][1]);const ps=(inStock(p).length?inStock(p):p.list).map(s=>p.sizes[s][1]),lo=Math.min(...ps);return (Math.max(...ps)>lo?'From ':'')+fmt(lo);}
+const link=(p,size)=>STORE+'/products/'+encodeURIComponent(p.handle)+(size?'?variant='+p.sizes[size][0]:'');
 const art=p=>`<img src="${p.imgs[0]}" alt="${esc(p.name)}" loading="lazy" decoding="async">${p.imgs[1]?`<img class="alt" src="${p.imgs[1]}" alt="" aria-hidden="true" loading="lazy" decoding="async">`:''}`;
 const page=document.getElementById('shop');
-const title='LONERWEAR';let k=0;
 page.innerHTML=`<div class="m-grain" aria-hidden="true"></div>
 <button class="m-home" id="s-home" aria-label="Back to home"><img src="logo.png" alt="jev."></button>
 <section class="m-sec s-only" aria-label="Shop" id="s-grid">
   <div class="s-grid">${SHOP.products.map((p,i)=>`<button class="s-card m-rv" data-i="${i}" aria-haspopup="dialog">
-    <div class="s-stage">${STARPATH}<div class="s-garm">${art(p)}</div></div>
-    <div class="s-info"><span class="s-name">${esc(p.name)}</span><span class="s-price">${money(p)}</span></div></button>`).join('')}</div>
+    <div class="s-stage">${STARPATH}${p.isNew?'<span class="s-new">New</span>':''}<div class="s-garm">${art(p)}</div></div>
+    <div class="s-info"><span class="s-name">${esc(p.name)}</span><span class="s-price">${priceLabel(p)}</span></div></button>`).join('')}</div>
 </section>
 <div class="s-scrim" id="s-scrim"></div>
 <aside class="s-drawer" id="s-drawer" role="dialog" aria-modal="true" aria-label="Product" tabindex="-1"></aside>`;
 // same brushed ink blade under hovered names
 const IB=document.querySelector('.ib')?document.querySelector('.ib').outerHTML:'';
 page.querySelectorAll('.s-name').forEach(el=>{if(IB&&!el.querySelector('.ib'))el.insertAdjacentHTML('afterbegin',IB);});
+// card prices and sold-out marks, redrawn whenever the live store data arrives
+function paintCards(){page.querySelectorAll('.s-card').forEach(c=>{const p=SHOP.products[+c.dataset.i],out=soldOut(p);c.classList.toggle('out',out);
+  c.querySelector('.s-price').textContent=out?'Sold out':priceLabel(p);});}
 // product drawer
 const drawer=page.querySelector('#s-drawer');let cur=null,size=null;
-function openP(i){const p=SHOP.products[i];cur=p;size=p.sizes.length===1?p.sizes[0]:null;
+function openP(i){const p=SHOP.products[i];cur=i;const avail=inStock(p);size=p.list.length===1&&avail.length?p.list[0]:null;const out=soldOut(p);
   drawer.innerHTML=`<button class="s-x" id="s-x" aria-label="Close">✕</button>
    <div class="s-d-stage">${STARPATH}<div class="s-garm"><img id="s-main" src="${p.imgs[0]}" alt="${esc(p.name)}"></div></div>
    ${p.imgs.length>1?`<div class="s-thumbs">${p.imgs.map((u,j)=>`<button aria-label="View ${j+1}" aria-pressed="${j===0}"><img src="${u}" alt=""></button>`).join('')}</div>`:''}
-   <div class="s-d-body"><h3>${esc(p.full||p.name)}</h3><div class="s-d-price">${money(p)}</div>
-    <div class="s-opt"><div class="m-label">${STAR}<b>Size</b></div><div class="s-sizes">${p.sizes.map(s=>`<button aria-pressed="${s===size}">${s}</button>`).join('')}</div></div>
-    <a class="s-buy" id="s-buy" href="${p.url}" target="_blank" rel="noopener"><span>Buy now</span></a><div class="s-hint" id="s-hint" aria-live="polite"></div>
+   <div class="s-d-body"><h3>${esc(p.full||p.name)}</h3><div class="s-d-price" id="s-d-price">${out?'Sold out':priceLabel(p,size)}</div>
+    <div class="s-opt"><div class="m-label">${STAR}<b>Size</b></div><div class="s-sizes">${p.list.map(s=>`<button aria-pressed="${s===size}"${p.avail[s]?'':' disabled aria-label="'+s+', sold out"'}>${s}</button>`).join('')}</div></div>
+    <a class="s-buy${out?' off':''}" id="s-buy" href="${out?'#':link(p,size)}" target="_blank" rel="noopener"${out?' aria-disabled="true"':''}><span>${out?'Sold out':'Buy now'}</span></a><div class="s-hint" id="s-hint" aria-live="polite"></div>
     <ul class="s-d-list">${p.points.map(t=>`<li>${esc(t)}</li>`).join('')}</ul></div>`;
   drawer.querySelectorAll('.s-thumbs button').forEach((b,j)=>b.addEventListener('click',()=>{const m=drawer.querySelector('#s-main');m.style.opacity=0;setTimeout(()=>{m.src=p.imgs[j];m.style.opacity=1;},180);
     drawer.querySelectorAll('.s-thumbs button').forEach(x=>x.setAttribute('aria-pressed',x===b));}));
-  drawer.querySelectorAll('.s-sizes button').forEach(b=>b.addEventListener('click',()=>{size=b.textContent;drawer.querySelectorAll('.s-sizes button').forEach(x=>x.setAttribute('aria-pressed',x===b));drawer.querySelector('#s-hint').textContent='';drawer.querySelector('#s-buy').classList.remove('need');}));
-  drawer.querySelector('#s-buy').addEventListener('click',e=>{if(!size){e.preventDefault();drawer.querySelector('#s-hint').textContent='Pick a size first.';drawer.querySelector('#s-buy').classList.add('need');}
-    else drawer.querySelector('#s-hint').textContent=`Opening the store, choose ${size} at checkout.`;});
+  drawer.querySelectorAll('.s-sizes button').forEach(b=>b.addEventListener('click',()=>{if(b.disabled)return;size=b.textContent;drawer.querySelectorAll('.s-sizes button').forEach(x=>x.setAttribute('aria-pressed',x===b));
+    drawer.querySelector('#s-hint').textContent='';const buy=drawer.querySelector('#s-buy');buy.classList.remove('need');buy.href=link(p,size);drawer.querySelector('#s-d-price').textContent=priceLabel(p,size);}));
+  drawer.querySelector('#s-buy').addEventListener('click',e=>{const buy=e.currentTarget;if(buy.classList.contains('off')){e.preventDefault();return;}
+    if(!size){e.preventDefault();drawer.querySelector('#s-hint').textContent='Pick a size first.';buy.classList.add('need');}
+    else drawer.querySelector('#s-hint').textContent=`Opening the store with size ${size} picked.`;});
   drawer.querySelector('#s-x').addEventListener('click',closeP);
   page.classList.add('drawer');drawer.scrollTop=0;setTimeout(()=>drawer.focus({preventScroll:true}),50);}
 function closeP(){page.classList.remove('drawer');cur=null;}
@@ -1486,6 +1518,14 @@ page.querySelector('#s-scrim').addEventListener('click',closeP);
 page.querySelectorAll('.s-card').forEach(c=>c.addEventListener('click',()=>openP(+c.dataset.i)));
 addEventListener('keydown',e=>{if(e.key==='Escape'&&page.classList.contains('drawer')){e.stopImmediatePropagation();closeP();}},true);
 page.querySelector('#s-home').addEventListener('click',()=>document.getElementById('back').click());
+// live prices and sold-out sizes from the Shopify store (only once the store is open to the public)
+(()=>{const ctl=new AbortController(),t=setTimeout(()=>ctl.abort(),8000);
+  fetch('/api/shop',{signal:ctl.signal}).then(r=>r.ok?r.json():null).catch(()=>null).then(j=>{clearTimeout(t);if(!j||!j.ok||!Array.isArray(j.products))return;
+    const live=Object.fromEntries(j.products.map(p=>[p.handle,p]));
+    SHOP.products.forEach(p=>{const l=live[p.handle];if(!l){p.list.forEach(s=>p.avail[s]=false);return;} // taken down in the store
+      p.list.forEach(s=>p.avail[s]=false);
+      l.variants.forEach(v=>{const s=String(v.size||'').toUpperCase().replace(/^XXL$/,'2XL');if(!p.sizes[s])return;p.sizes[s]=[v.id,v.price];p.avail[s]=!!v.available;});});
+    paintCards();if(cur!==null)openP(cur);});})();
 const io=new IntersectionObserver(es=>es.forEach(en=>{if(en.isIntersecting){en.target.classList.add('in');io.unobserve(en.target);}}),{root:window.__docScroll?null:page,threshold:.12});
 window.shopPage={open(){page.scrollTop=0;if(window.__docScroll)scrollTo(0,0);closeP();page.classList.remove('play');page.querySelectorAll('.m-rv').forEach(el=>{el.classList.remove('in');io.observe(el);});page.classList.add('on');void page.offsetWidth;page.classList.add('play');},
   close(){closeP();page.classList.remove('on','play');}};
