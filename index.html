@@ -487,7 +487,7 @@ canvas{position:fixed;inset:0;z-index:0;width:100%;height:100%;display:block;cur
 .s-d-price{margin-top:12px;font-size:16px;font-weight:700;letter-spacing:.04em;color:rgba(255,255,255,.85)}
 .s-opt{margin-top:26px}
 .s-opt .m-label{margin-bottom:12px}
-.s-sizes{display:flex;flex-wrap:wrap;gap:8px}
+.s-sizes{display:flex;flex-wrap:wrap;gap:8px}.s-sizes.ext span{display:inline-flex;align-items:center;justify-content:center;min-width:52px;height:44px;padding:0 14px;border:1px solid rgba(255,255,255,.28);color:#fff;font:700 12px/1 var(--hel);letter-spacing:.14em}.s-note{margin:12px 0 0;font-size:13px;color:rgba(255,255,255,.65)}
 .s-sizes button{min-width:52px;height:44px;padding:0 14px;background:none;border:1px solid rgba(255,255,255,.28);color:#fff;font:700 12px/1 var(--hel);letter-spacing:.14em;cursor:pointer;transition:background .2s,color .2s,border-color .2s}
 .s-sizes button:hover{border-color:#fff}
 .s-sizes button[aria-pressed="true"]{background:#fff;color:#4a0405;border-color:#fff}
@@ -1473,8 +1473,9 @@ const SHOP={
      sizes:{XS:[48146491670612,20],S:[48146491703380,20],M:[48146491736148,20],L:[48146491768916,20],XL:[48146491801684,20],'2XL':[48146491834452,20]},
      points:['White, red dragon on the front','Heavyweight 330 gsm, 100% cotton','Loose fit with dropped shoulders','Machine wash cold on gentle, don’t iron the print']},
     {handle:'loner-unisex-heavy-blend™-full-zip-hooded-sweatshirt',name:'LONER Full Zip Hoodie',full:'LONER Unisex Heavy Blend™ Full Zip Hooded Sweatshirt',
+     ext:'https://jkweto8.wixsite.com/thelonerjev/product-page/loner-unisex-heavy-blend-full-zip-hooded-sweatshirt', // sold on the Wix store, not Shopify
      imgs:['img-5a98535b81.webp','img-0bfa6c1136.webp'],
-     sizes:{S:[47373393821780,47.72],M:[47373393920084,47.72],L:[47373393952852,47.72],XL:[47373393887316,47.72],'2XL':[47373393789012,54.02],'3XL':[47373393854548,58.05]},
+     sizes:{S:[0,47.72],M:[0,47.72],L:[0,47.72],XL:[0,47.72],'2XL':[0,47.72],'3XL':[0,47.72]},
      points:['50/50 cotton-poly, medium-heavy 8 oz fabric','Silver metal zipper, roomy front pockets','Embroidered left chest, printed wrist details','Classic fit, runs true to size']}],
   cur:'US$'
 };
@@ -1487,7 +1488,7 @@ const fmt=n=>SHOP.cur+Number(n).toFixed(2);
 const inStock=p=>p.list.filter(s=>p.avail[s]);
 const soldOut=p=>!inStock(p).length;
 function priceLabel(p,size){if(size)return fmt(p.sizes[size][1]);const ps=(inStock(p).length?inStock(p):p.list).map(s=>p.sizes[s][1]),lo=Math.min(...ps);return (Math.max(...ps)>lo?'From ':'')+fmt(lo);}
-const link=(p,size)=>STORE+'/products/'+encodeURIComponent(p.handle)+(size?'?variant='+p.sizes[size][0]:'');
+const link=(p,size)=>p.ext?p.ext:STORE+'/products/'+encodeURIComponent(p.handle)+(size?'?variant='+p.sizes[size][0]:'');
 const art=p=>`<img src="${p.imgs[0]}" alt="${esc(p.name)}" loading="lazy" decoding="async">${p.imgs[1]?`<img class="alt" src="${p.imgs[1]}" alt="" aria-hidden="true" loading="lazy" decoding="async">`:''}`;
 const page=document.getElementById('shop');
 page.innerHTML=`<div class="m-grain" aria-hidden="true"></div>
@@ -1512,7 +1513,7 @@ function openP(i){const p=SHOP.products[i];cur=i;const avail=inStock(p);size=p.l
    <div class="s-d-stage">${STARPATH}<div class="s-garm"><img id="s-main" src="${p.imgs[0]}" alt="${esc(p.name)}"></div></div>
    ${p.imgs.length>1?`<div class="s-thumbs">${p.imgs.map((u,j)=>`<button aria-label="View ${j+1}" aria-pressed="${j===0}"><img src="${u}" alt=""></button>`).join('')}</div>`:''}
    <div class="s-d-body"><h3>${esc(p.full||p.name)}</h3><div class="s-d-price" id="s-d-price">${out?'Sold out':priceLabel(p,size)}</div>
-    <div class="s-opt"><div class="m-label">${STAR}<b>Size</b></div><div class="s-sizes">${p.list.map(s=>`<button aria-pressed="${s===size}"${p.avail[s]?'':' disabled aria-label="'+s+', sold out"'}>${s}</button>`).join('')}</div></div>
+    <div class="s-opt"><div class="m-label">${STAR}<b>${p.ext?'Sizes':'Size'}</b></div>${p.ext?`<div class="s-sizes ext">${p.list.map(s=>`<span>${s}</span>`).join('')}</div><p class="s-note">You’ll pick your size and colour on the next page.</p>`:`<div class="s-sizes">${p.list.map(s=>`<button aria-pressed="${s===size}"${p.avail[s]?'':' disabled aria-label="'+s+', sold out"'}>${s}</button>`).join('')}</div>`}</div>
     <a class="s-buy${out?' off':''}" id="s-buy" href="${out?'#':link(p,size)}" target="_blank" rel="noopener"${out?' aria-disabled="true"':''}><span>${out?'Sold out':'Buy now'}</span></a><div class="s-hint" id="s-hint" aria-live="polite"></div>
     <ul class="s-d-list">${p.points.map(t=>`<li>${esc(t)}</li>`).join('')}</ul></div>`;
   drawer.querySelectorAll('.s-thumbs button').forEach((b,j)=>b.addEventListener('click',()=>{const m=drawer.querySelector('#s-main');m.style.opacity=0;setTimeout(()=>{m.src=p.imgs[j];m.style.opacity=1;},180);
@@ -1520,7 +1521,8 @@ function openP(i){const p=SHOP.products[i];cur=i;const avail=inStock(p);size=p.l
   drawer.querySelectorAll('.s-sizes button').forEach(b=>b.addEventListener('click',()=>{if(b.disabled)return;size=b.textContent;drawer.querySelectorAll('.s-sizes button').forEach(x=>x.setAttribute('aria-pressed',x===b));
     drawer.querySelector('#s-hint').textContent='';const buy=drawer.querySelector('#s-buy');buy.classList.remove('need');buy.href=link(p,size);drawer.querySelector('#s-d-price').textContent=priceLabel(p,size);}));
   drawer.querySelector('#s-buy').addEventListener('click',e=>{const buy=e.currentTarget;if(buy.classList.contains('off')){e.preventDefault();return;}
-    if(!size){e.preventDefault();drawer.querySelector('#s-hint').textContent='Pick a size first.';buy.classList.add('need');}
+    if(p.ext)drawer.querySelector('#s-hint').textContent='Opening the store.';
+    else if(!size){e.preventDefault();drawer.querySelector('#s-hint').textContent='Pick a size first.';buy.classList.add('need');}
     else drawer.querySelector('#s-hint').textContent=`Opening the store with size ${size} picked.`;});
   drawer.querySelector('#s-x').addEventListener('click',closeP);
   page.classList.add('drawer');drawer.scrollTop=0;setTimeout(()=>drawer.focus({preventScroll:true}),50);}
@@ -1533,7 +1535,8 @@ page.querySelector('#s-home').addEventListener('click',()=>document.getElementBy
 (()=>{const ctl=new AbortController(),t=setTimeout(()=>ctl.abort(),8000);
   fetch('/api/shop',{signal:ctl.signal}).then(r=>r.ok?r.json():null).catch(()=>null).then(j=>{clearTimeout(t);if(!j||!j.ok||!Array.isArray(j.products))return;
     const live=Object.fromEntries(j.products.map(p=>[p.handle,p]));
-    SHOP.products.forEach(p=>{const l=live[p.handle];if(!l){p.list.forEach(s=>p.avail[s]=false);return;} // taken down in the store
+    SHOP.products.forEach(p=>{if(p.ext)return; // the hoodie's price and stock come from the Wix store, not Shopify
+      const l=live[p.handle];if(!l){p.list.forEach(s=>p.avail[s]=false);return;} // taken down in the store
       p.list.forEach(s=>p.avail[s]=false);
       l.variants.forEach(v=>{const s=String(v.size||'').toUpperCase().replace(/^XXL$/,'2XL');if(!p.sizes[s])return;p.sizes[s]=[v.id,v.price];p.avail[s]=!!v.available;});});
     paintCards();if(cur!==null)openP(cur);});})();
