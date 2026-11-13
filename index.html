@@ -438,7 +438,7 @@ canvas{position:fixed;inset:0;z-index:0;width:100%;height:100%;display:block;cur
 .shop .m-title{font-size:clamp(60px,10.2vw,186px)}
 @media (max-width:820px){.shop .m-title{white-space:nowrap;font-size:clamp(46px,15vw,96px)}}
 .s-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(18px,2.6vw,40px);margin-top:40px}
-.s-card{position:relative;display:block;text-align:left;background:none;border:0;padding:0;color:#fff;cursor:pointer;font:inherit}
+.s-card{position:relative;display:block;text-align:left;background:none;border:0;padding:0;color:#fff;cursor:pointer;font:inherit;text-decoration:none}
 .s-card:focus-visible{outline:none}
 .s-stage{position:relative;aspect-ratio:4/5;overflow:hidden;background:radial-gradient(ellipse at 50% 42%,#8c0d10 0%,#740a0b 50%,#4f0405 100%);box-shadow:0 24px 50px -24px rgba(0,0,0,.75)}
 .s-stage .s-star{position:absolute;left:50%;top:44%;width:78%;aspect-ratio:1;transform:translate(-50%,-50%) rotate(0deg) scale(.85);opacity:0;transition:opacity .5s ease,transform 1.4s cubic-bezier(.2,.8,.2,1);pointer-events:none}
@@ -1494,9 +1494,9 @@ const page=document.getElementById('shop');
 page.innerHTML=`<div class="m-grain" aria-hidden="true"></div>
 <button class="m-home" id="s-home" aria-label="Back to home"><img src="logo.png" alt="jev."></button>
 <section class="m-sec s-only" aria-label="Shop" id="s-grid">
-  <div class="s-grid">${SHOP.products.map((p,i)=>`<button class="s-card m-rv" data-i="${i}" aria-haspopup="dialog">
+  <div class="s-grid">${SHOP.products.map((p,i)=>`<a class="s-card m-rv" data-i="${i}" href="${link(p)}" target="_blank" rel="noopener">
     <div class="s-stage">${STARPATH}${p.isNew?'<span class="s-new">New</span>':''}<div class="s-garm">${art(p)}</div></div>
-    <div class="s-info"><span class="s-name">${esc(p.name)}</span><span class="s-price">${priceLabel(p)}</span></div></button>`).join('')}</div>
+    <div class="s-info"><span class="s-name">${esc(p.name)}</span><span class="s-price">${priceLabel(p)}</span></div></a>`).join('')}</div>
 </section>
 <div class="s-scrim" id="s-scrim"></div>
 <aside class="s-drawer" id="s-drawer" role="dialog" aria-modal="true" aria-label="Product" tabindex="-1"></aside>`;
@@ -1528,7 +1528,7 @@ function openP(i){const p=SHOP.products[i];cur=i;const avail=inStock(p);size=p.l
   page.classList.add('drawer');drawer.scrollTop=0;setTimeout(()=>drawer.focus({preventScroll:true}),50);}
 function closeP(){page.classList.remove('drawer');cur=null;}
 page.querySelector('#s-scrim').addEventListener('click',closeP);
-page.querySelectorAll('.s-card').forEach(c=>c.addEventListener('click',()=>openP(+c.dataset.i)));
+// each product card is a straight link to that piece in the store (no in-between screen)
 addEventListener('keydown',e=>{if(e.key==='Escape'&&page.classList.contains('drawer')){e.stopImmediatePropagation();closeP();}},true);
 page.querySelector('#s-home').addEventListener('click',()=>document.getElementById('back').click());
 // live prices and sold-out sizes from the Shopify store (only once the store is open to the public)
